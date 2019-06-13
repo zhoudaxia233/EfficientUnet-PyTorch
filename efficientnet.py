@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from torch.hub import load_state_dict_from_url
 from utils import *
 
@@ -61,7 +62,7 @@ class EfficientNet(nn.Module):
         self.dropout_rate = self.global_params.dropout_rate
         self.fc = nn.Linear(out_channels, self.global_params.num_classes)
 
-    def __feature_extractor(self, x):
+    def forward(self, x):
         # Stem
         x = self.stem_conv(x)
         x = self.stem_batch_norm(x)
@@ -79,14 +80,12 @@ class EfficientNet(nn.Module):
         x = self.head_batch_norm(x)
         x = swish(x)
 
-        return x
-
-    def forward(self, x):
-        x = self.__feature_extractor(x)
-
+        # Pooling and Dropout
         x = F.adaptive_avg_pool2d(x, 1).squeeze(-1).squeeze(-1)
         if self.dropout_rate > 0:
             x = F.dropout(x, p=self.dropout_rate, training=self.training)
+
+        # Fully-connected layer
         x = self.fc(x)
         return x
 
@@ -97,7 +96,14 @@ class EfficientNet(nn.Module):
     @classmethod
     def encoder(cls, model_name, *, pretrained=False):
         model = cls.from_name(model_name, pretrained=pretrained)
-        return model.__feature_extractor
+
+        return nn.Sequential(OrderedDict([
+            ('stem_conv', model.stem_conv),
+            ('stem_batch_norm', model.stem_batch_norm),
+            ('blocks', model.blocks),
+            ('head_conv', model.head_conv),
+            ('head_batch_norm', model.head_batch_norm)
+        ]))
 
 
 def _get_model_by_name(model_name, classes=1000, pretrained=False):
