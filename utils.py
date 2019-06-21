@@ -168,8 +168,12 @@ class BlockDecoder(object):
         return block_strings
 
 
-def swish(x):
-    return x * torch.sigmoid(x)
+class Swish(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return x * torch.sigmoid(x)
 
 
 def drop_connect(inputs, drop_connect_rate, training):
@@ -215,6 +219,8 @@ class MBConvBlock(nn.Module):
         self.batch_norm_epsilon = global_params.batch_norm_epsilon
         self.has_se = (self.block_args.se_ratio is not None) and (0 < self.block_args.se_ratio <= 1)
         self.id_skip = block_args.id_skip
+
+        self.swish = Swish()
 
         # Expansion phase
         in_channels = self.block_args.input_filters
@@ -265,13 +271,13 @@ class MBConvBlock(nn.Module):
         identity = x
         # Expansion and depth-wise convolution
         if self.block_args.expand_ratio != 1:
-            x = swish(self.expand_batch_norm(self.expand_conv(x)))
-        x = swish(self.depthwise_batch_norm(self.depthwise_conv(x)))
+            x = self.swish(self.expand_batch_norm(self.expand_conv(x)))
+        x = self.swish(self.depthwise_batch_norm(self.depthwise_conv(x)))
 
         # Squeeze and Excitation
         if self.has_se:
             x_squeezed = F.adaptive_avg_pool2d(x, 1)
-            x_squeezed = self.se_expand(swish(self.se_reduce(x_squeezed)))
+            x_squeezed = self.se_expand(self.swish(self.se_reduce(x_squeezed)))
             x = torch.sigmoid(x_squeezed) * x
 
         x = self.output_batch_norm(self.project_conv(x))

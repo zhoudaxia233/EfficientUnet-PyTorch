@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from torch.hub import load_state_dict_from_url
 from utils import *
 
@@ -26,6 +25,8 @@ class EfficientNet(nn.Module):
         self.stem_batch_norm = nn.BatchNorm2d(num_features=out_channels,
                                               momentum=batch_norm_momentum,
                                               eps=batch_norm_epsilon)
+
+        self.swish = Swish()
 
         # Build blocks
         self.blocks = nn.ModuleList([])
@@ -66,7 +67,7 @@ class EfficientNet(nn.Module):
         # Stem
         x = self.stem_conv(x)
         x = self.stem_batch_norm(x)
-        x = swish(x)
+        x = self.swish(x)
 
         # Blocks
         for idx, block in enumerate(self.blocks):
@@ -78,7 +79,7 @@ class EfficientNet(nn.Module):
         # Head
         x = self.head_conv(x)
         x = self.head_batch_norm(x)
-        x = swish(x)
+        x = self.swish(x)
 
         # Pooling and Dropout
         x = F.adaptive_avg_pool2d(x, 1).squeeze(-1).squeeze(-1)
@@ -97,13 +98,38 @@ class EfficientNet(nn.Module):
     def encoder(cls, model_name, *, pretrained=False):
         model = cls.from_name(model_name, pretrained=pretrained)
 
-        return nn.Sequential(OrderedDict([
-            ('stem_conv', model.stem_conv),
-            ('stem_batch_norm', model.stem_batch_norm),
-            ('blocks', model.blocks),
-            ('head_conv', model.head_conv),
-            ('head_batch_norm', model.head_batch_norm)
-        ]))
+        class Encoder(nn.Module):
+            def __init__(self):
+                super().__init__()
+
+                self.global_params = model.global_params
+
+                self.stem_conv = model.stem_conv
+                self.stem_batch_norm = model.stem_batch_norm
+                self.swish = model.swish
+                self.blocks = model.blocks
+                self.head_conv = model.head_conv
+                self.head_batch_norm = model.head_batch_norm
+
+            def forward(self, x):
+                # Stem
+                x = self.stem_conv(x)
+                x = self.stem_batch_norm(x)
+                x = self.swish(x)
+
+                # Blocks
+                for idx, block in enumerate(self.blocks):
+                    drop_connect_rate = self.global_params.drop_connect_rate
+                    if drop_connect_rate:
+                        drop_connect_rate *= idx / len(self.blocks)
+                    x = block(x, drop_connect_rate)
+
+                # Head
+                x = self.head_conv(x)
+                x = self.head_batch_norm(x)
+                x = self.swish(x)
+                return x
+        return Encoder()
 
 
 def _get_model_by_name(model_name, classes=1000, pretrained=False):
