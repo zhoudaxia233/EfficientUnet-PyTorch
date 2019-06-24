@@ -228,61 +228,61 @@ class MBConvBlock(nn.Module):
         in_channels = self.block_args.input_filters
         out_channels = self.block_args.input_filters * self.block_args.expand_ratio
         if self.block_args.expand_ratio != 1:
-            self.expand_conv = Conv2dSamePadding(in_channels=in_channels,
-                                                 out_channels=out_channels,
-                                                 kernel_size=1,
-                                                 bias=False)
-            self.expand_batch_norm = nn.BatchNorm2d(num_features=out_channels,
-                                                    momentum=self.batch_norm_momentum,
-                                                    eps=self.batch_norm_epsilon)
+            self._expand_conv = Conv2dSamePadding(in_channels=in_channels,
+                                                  out_channels=out_channels,
+                                                  kernel_size=1,
+                                                  bias=False)
+            self._bn0 = nn.BatchNorm2d(num_features=out_channels,
+                                       momentum=self.batch_norm_momentum,
+                                       eps=self.batch_norm_epsilon)
 
         # Depth-wise convolution phase
         kernel_size = self.block_args.kernel_size
         strides = self.block_args.strides
-        self.depthwise_conv = Conv2dSamePadding(in_channels=out_channels,
-                                                out_channels=out_channels,
-                                                groups=out_channels,
-                                                kernel_size=kernel_size,
-                                                stride=strides,
-                                                bias=False)
-        self.depthwise_batch_norm = nn.BatchNorm2d(num_features=out_channels,
-                                                   momentum=self.batch_norm_momentum,
-                                                   eps=self.batch_norm_epsilon)
+        self._depthwise_conv = Conv2dSamePadding(in_channels=out_channels,
+                                                 out_channels=out_channels,
+                                                 groups=out_channels,
+                                                 kernel_size=kernel_size,
+                                                 stride=strides,
+                                                 bias=False)
+        self._bn1 = nn.BatchNorm2d(num_features=out_channels,
+                                   momentum=self.batch_norm_momentum,
+                                   eps=self.batch_norm_epsilon)
 
         # Squeeze and Excitation layer
         if self.has_se:
             num_squeezed_channels = max(1, int(self.block_args.input_filters * self.block_args.se_ratio))
-            self.se_reduce = Conv2dSamePadding(in_channels=out_channels,
-                                               out_channels=num_squeezed_channels,
-                                               kernel_size=1)
-            self.se_expand = Conv2dSamePadding(in_channels=num_squeezed_channels,
-                                               out_channels=out_channels,
-                                               kernel_size=1)
+            self._se_reduce = Conv2dSamePadding(in_channels=out_channels,
+                                                out_channels=num_squeezed_channels,
+                                                kernel_size=1)
+            self._se_expand = Conv2dSamePadding(in_channels=num_squeezed_channels,
+                                                out_channels=out_channels,
+                                                kernel_size=1)
 
         # Output phase
         final_output_channels = self.block_args.output_filters
-        self.project_conv = Conv2dSamePadding(in_channels=out_channels,
-                                              out_channels=final_output_channels,
-                                              kernel_size=1,
-                                              bias=False)
-        self.output_batch_norm = nn.BatchNorm2d(num_features=final_output_channels,
-                                                momentum=self.batch_norm_momentum,
-                                                eps=self.batch_norm_epsilon)
+        self._project_conv = Conv2dSamePadding(in_channels=out_channels,
+                                               out_channels=final_output_channels,
+                                               kernel_size=1,
+                                               bias=False)
+        self._bn2 = nn.BatchNorm2d(num_features=final_output_channels,
+                                   momentum=self.batch_norm_momentum,
+                                   eps=self.batch_norm_epsilon)
 
     def forward(self, x, drop_connect_rate=None):
         identity = x
         # Expansion and depth-wise convolution
         if self.block_args.expand_ratio != 1:
-            x = self.swish(self.expand_batch_norm(self.expand_conv(x)))
-        x = self.swish(self.depthwise_batch_norm(self.depthwise_conv(x)))
+            x = self.swish(self._bn0(self._expand_conv(x)))
+        x = self.swish(self._bn1(self._depthwise_conv(x)))
 
         # Squeeze and Excitation
         if self.has_se:
             x_squeezed = F.adaptive_avg_pool2d(x, 1)
-            x_squeezed = self.se_expand(self.swish(self.se_reduce(x_squeezed)))
+            x_squeezed = self._se_expand(self.swish(self._se_reduce(x_squeezed)))
             x = torch.sigmoid(x_squeezed) * x
 
-        x = self.output_batch_norm(self.project_conv(x))
+        x = self._bn2(self._project_conv(x))
 
         # Skip connection and drop connect
         input_filters, output_filters = self.block_args.input_filters, self.block_args.output_filters
