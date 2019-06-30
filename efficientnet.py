@@ -21,14 +21,17 @@ class EfficientNet(nn.Module):
                                             out_channels,
                                             kernel_size=3,
                                             stride=2,
-                                            bias=False)
-        self._bn0 = nn.BatchNorm2d(num_features=out_channels,
-                                   momentum=batch_norm_momentum,
-                                   eps=batch_norm_epsilon)
+                                            bias=False,
+                                            name='stem_conv')
+        self._bn0 = BatchNorm2d(num_features=out_channels,
+                                momentum=batch_norm_momentum,
+                                eps=batch_norm_epsilon,
+                                name='stem_batch_norm')
 
-        self._swish = Swish()
+        self._swish = Swish(name='swish')
 
         # Build _blocks
+        idx = 0
         self._blocks = nn.ModuleList([])
         for block_args in self.block_args_list:
 
@@ -40,13 +43,16 @@ class EfficientNet(nn.Module):
             )
 
             # The first block needs to take care of stride and filter size increase.
-            self._blocks.append(MBConvBlock(block_args, self.global_params))
+            self._blocks.append(MBConvBlock(block_args, self.global_params, idx=idx))
+            idx += 1
+
             if block_args.num_repeat > 1:
                 block_args = block_args._replace(input_filters=block_args.output_filters, strides=[1, 1])
 
             # The rest of the _blocks
             for _ in range(block_args.num_repeat - 1):
-                self._blocks.append(MBConvBlock(block_args, self.global_params))
+                self._blocks.append(MBConvBlock(block_args, self.global_params, idx=idx))
+                idx += 1
 
         # Head
         in_channels = block_args.output_filters  # output of final block
@@ -54,10 +60,12 @@ class EfficientNet(nn.Module):
         self._conv_head = Conv2dSamePadding(in_channels,
                                             out_channels,
                                             kernel_size=1,
-                                            bias=False)
-        self._bn1 = nn.BatchNorm2d(num_features=out_channels,
-                                   momentum=batch_norm_momentum,
-                                   eps=batch_norm_epsilon)
+                                            bias=False,
+                                            name='head_conv')
+        self._bn1 = BatchNorm2d(num_features=out_channels,
+                                momentum=batch_norm_momentum,
+                                eps=batch_norm_epsilon,
+                                name='head_batch_norm')
 
         # Final linear layer
         self.dropout_rate = self.global_params.dropout_rate
@@ -106,16 +114,17 @@ class EfficientNet(nn.Module):
 
                 self.stem_conv = model._conv_stem
                 self.stem_batch_norm = model._bn0
-                self.swish = model._swish
+                self.stem_swish = Swish(name='stem_swish')
                 self.blocks = model._blocks
                 self.head_conv = model._conv_head
                 self.head_batch_norm = model._bn1
+                self.head_swish = Swish(name='head_swish')
 
             def forward(self, x):
                 # Stem
                 x = self.stem_conv(x)
                 x = self.stem_batch_norm(x)
-                x = self.swish(x)
+                x = self.stem_swish(x)
 
                 # Blocks
                 for idx, block in enumerate(self.blocks):
@@ -127,8 +136,9 @@ class EfficientNet(nn.Module):
                 # Head
                 x = self.head_conv(x)
                 x = self.head_batch_norm(x)
-                x = self.swish(x)
+                x = self.head_swish(x)
                 return x
+
         return Encoder()
 
 
