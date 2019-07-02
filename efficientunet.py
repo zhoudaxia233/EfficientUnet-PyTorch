@@ -1,5 +1,11 @@
 from collections import OrderedDict
 from layers import *
+from efficientnet import EfficientNet
+
+
+__all__ = ['EfficientUnet', 'get_efficientunet_b0', 'get_efficientunet_b1', 'get_efficientunet_b2',
+           'get_efficientunet_b3', 'get_efficientunet_b4', 'get_efficientunet_b5', 'get_efficientunet_b6',
+           'get_efficientunet_b7']
 
 
 def get_blocks_to_be_concat(model, x):
@@ -91,13 +97,57 @@ class EfficientUnet(nn.Module):
         x = nn.Conv2d(x.size(1), self.out_channels, kernel_size=1)(x)
 
         return x
-#
-#
+
+
+def get_efficientunet_b0(out_channels=2, concat_input=True, pretrained=True):
+    encoder = EfficientNet.encoder('efficientnet-b0', pretrained=pretrained)
+    model = EfficientUnet(encoder, out_channels=out_channels, concat_input=concat_input)
+    return model
+
+
+def get_efficientunet_b1(out_channels=2, concat_input=True, pretrained=True):
+    encoder = EfficientNet.encoder('efficientnet-b1', pretrained=pretrained)
+    model = EfficientUnet(encoder, out_channels=out_channels, concat_input=concat_input)
+    return model
+
+
+def get_efficientunet_b2(out_channels=2, concat_input=True, pretrained=True):
+    encoder = EfficientNet.encoder('efficientnet-b2', pretrained=pretrained)
+    model = EfficientUnet(encoder, out_channels=out_channels, concat_input=concat_input)
+    return model
+
+
+def get_efficientunet_b3(out_channels=2, concat_input=True, pretrained=True):
+    encoder = EfficientNet.encoder('efficientnet-b3', pretrained=pretrained)
+    model = EfficientUnet(encoder, out_channels=out_channels, concat_input=concat_input)
+    return model
+
+
+def get_efficientunet_b4(out_channels=2, concat_input=True, pretrained=True):
+    encoder = EfficientNet.encoder('efficientnet-b4', pretrained=pretrained)
+    model = EfficientUnet(encoder, out_channels=out_channels, concat_input=concat_input)
+    return model
+
+
+def get_efficientunet_b5(out_channels=2, concat_input=True, pretrained=True):
+    encoder = EfficientNet.encoder('efficientnet-b5', pretrained=pretrained)
+    model = EfficientUnet(encoder, out_channels=out_channels, concat_input=concat_input)
+    return model
+
+
+def get_efficientunet_b6(out_channels=2, concat_input=True, pretrained=True):
+    encoder = EfficientNet.encoder('efficientnet-b6', pretrained=pretrained)
+    model = EfficientUnet(encoder, out_channels=out_channels, concat_input=concat_input)
+    return model
+
+
+def get_efficientunet_b7(out_channels=2, concat_input=True, pretrained=True):
+    encoder = EfficientNet.encoder('efficientnet-b7', pretrained=pretrained)
+    model = EfficientUnet(encoder, out_channels=out_channels, concat_input=concat_input)
+    return model
+
+
 # if __name__ == '__main__':
-#     from efficientnet import *
-#
 #     t = torch.rand(2, 3, 224, 224)
-#     for i in range(8):
-#         encoder = EfficientNet.encoder(f'efficientnet-b{i}', pretrained=True)
-#         model = EfficientUnet(encoder)
-#         print(model(t).size())
+#     model = get_efficientunet_b5()
+#     print(model(t).size())
