@@ -151,3 +151,20 @@ class MBConvBlock(nn.Module):
                 x = drop_connect(x, drop_connect_rate=drop_connect_rate, training=self.training)
             x = x + identity
         return x
+
+
+def double_conv(in_channels, out_channels):
+    return nn.Sequential(
+        nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1),
+        nn.BatchNorm2d(out_channels),
+        nn.ReLU(inplace=True),
+        nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1),
+        nn.BatchNorm2d(out_channels),
+        nn.ReLU(inplace=True)
+    )
+
+
+def up_conv(in_channels, out_channels):
+    return nn.ConvTranspose2d(
+        in_channels, out_channels, kernel_size=2, stride=2
+    )
