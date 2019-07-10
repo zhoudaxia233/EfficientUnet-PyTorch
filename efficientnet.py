@@ -110,6 +110,8 @@ class EfficientNet(nn.Module):
             def __init__(self):
                 super().__init__()
 
+                self.name = model_name
+
                 self.global_params = model.global_params
 
                 self.stem_conv = model._conv_stem
