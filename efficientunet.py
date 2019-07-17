@@ -174,9 +174,3 @@ def get_efficientunet_b7(out_channels=2, concat_input=True, pretrained=True):
     encoder = EfficientNet.encoder('efficientnet-b7', pretrained=pretrained)
     model = EfficientUnet(encoder, out_channels=out_channels, concat_input=concat_input)
     return model
-
-
-# if __name__ == '__main__':
-#     t = torch.rand(2, 3, 224, 224)
-#     model = get_efficientunet_b5()
-#     print(model(t).size())

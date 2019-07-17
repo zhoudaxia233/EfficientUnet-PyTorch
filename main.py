@@ -1,16 +1,14 @@
 from efficientnet import *
+from efficientunet import *
 
 # This is a demo to show you how to use the library.
 if __name__ == '__main__':
-    t = torch.rand(2, 3, 224, 224)
+    t = torch.rand(2, 3, 224, 224).cuda()
 
-    # encoder test
-    for i in range(8):
-        print(f'efficientnet-b{i}')
-        encoder = EfficientNet.encoder(f'efficientnet-b{i}', pretrained=True)
-        print(encoder(t).size())
-        print()
-
-    # model test
-    model = EfficientNet.from_name('efficientnet-b7', n_classes=5, pretrained=True)
+    # EfficientNet test
+    model = EfficientNet.from_name('efficientnet-b7', n_classes=5, pretrained=True).cuda()
     print(model(t).size())
+
+    # EfficientUnet test
+    b0unet = get_efficientunet_b0(out_channels=2, concat_input=True, pretrained=True).cuda()
+    print(b0unet(t).size())
