@@ -1,4 +1,3 @@
-from efficientnet import *
 from efficientunet import *
 
 # This is a demo to show you how to use the library.

@@ -1,6 +1,6 @@
 import re
 from collections import namedtuple
-from layers import *
+from .layers import *
 
 
 GlobalParams = namedtuple('GlobalParams', ['batch_norm_momentum', 'batch_norm_epsilon', 'dropout_rate', 'num_classes',

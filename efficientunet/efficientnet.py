@@ -1,5 +1,5 @@
 from torch.hub import load_state_dict_from_url
-from utils import *
+from .utils import *
 
 
 class EfficientNet(nn.Module):

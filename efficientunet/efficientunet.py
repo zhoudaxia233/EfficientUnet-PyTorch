@@ -1,6 +1,6 @@
 from collections import OrderedDict
-from layers import *
-from efficientnet import EfficientNet
+from .layers import *
+from .efficientnet import EfficientNet
 
 
 __all__ = ['EfficientUnet', 'get_efficientunet_b0', 'get_efficientunet_b1', 'get_efficientunet_b2',
