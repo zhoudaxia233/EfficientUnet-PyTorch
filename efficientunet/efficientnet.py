@@ -149,8 +149,15 @@ def _get_model_by_name(model_name, classes=1000, pretrained=False):
     model = EfficientNet(block_args_list, global_params)
     try:
         if pretrained:
-            state_dict = load_state_dict_from_url(IMAGENET_WEIGHTS[model_name])
-            model.load_state_dict(state_dict)
+            pretrained_state_dict = load_state_dict_from_url(IMAGENET_WEIGHTS[model_name])
+
+            if classes != 1000:
+                random_state_dict = model.state_dict()
+                pretrained_state_dict['_fc.weight'] = random_state_dict['_fc.weight']
+                pretrained_state_dict['_fc.bias'] = random_state_dict['_fc.bias']
+
+            model.load_state_dict(pretrained_state_dict)
+
     except KeyError as e:
         print(f"NOTE: Currently model {e} doesn't have pretrained weights, therefore a model with randomly initialized"
               " weights is returned.")

@@ -5,7 +5,7 @@ if __name__ == '__main__':
     t = torch.rand(2, 3, 224, 224).cuda()
 
     # EfficientNet test
-    model = EfficientNet.from_name('efficientnet-b7', n_classes=5, pretrained=True).cuda()
+    model = EfficientNet.from_name('efficientnet-b5', n_classes=5, pretrained=True).cuda()
     print(model(t).size())
 
     # EfficientUnet test
