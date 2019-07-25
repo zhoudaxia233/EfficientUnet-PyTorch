@@ -20,7 +20,7 @@ class Conv2dSamePadding(nn.Conv2d):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, dilation=1, groups=1, bias=True, name=None):
         super().__init__(in_channels, out_channels, kernel_size, stride, padding=0, dilation=dilation, groups=groups,
                          bias=bias)
-        self.stride = stride if isinstance(stride, (list, tuple)) else [stride] * 2
+        self.stride = self.stride if len(self.stride) == 2 else [self.stride[0]] * 2
         self.name = name
 
     def forward(self, x):

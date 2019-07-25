@@ -47,7 +47,7 @@ class EfficientNet(nn.Module):
             idx += 1
 
             if block_args.num_repeat > 1:
-                block_args = block_args._replace(input_filters=block_args.output_filters, strides=[1, 1])
+                block_args = block_args._replace(input_filters=block_args.output_filters, strides=1)
 
             # The rest of the _blocks
             for _ in range(block_args.num_repeat - 1):
