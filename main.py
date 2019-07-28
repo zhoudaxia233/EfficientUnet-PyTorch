@@ -8,6 +8,10 @@ if __name__ == '__main__':
     model = EfficientNet.from_name('efficientnet-b5', n_classes=5, pretrained=True).cuda()
     print(model(t).size())
 
+    # EfficientNet with custom head test
+    model_ch = EfficientNet.custom_head('efficientnet-b5', n_classes=5, pretrained=True).cuda()
+    print(model_ch(t).size())
+
     # EfficientUnet test
     b0unet = get_efficientunet_b0(out_channels=2, concat_input=True, pretrained=True).cuda()
     print(b0unet(t).size())

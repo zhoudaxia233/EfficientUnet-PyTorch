@@ -143,6 +143,36 @@ class EfficientNet(nn.Module):
 
         return Encoder()
 
+    @classmethod
+    def custom_head(cls, model_name, *, n_classes=1000, pretrained=False):
+        if n_classes == 1000:
+            return cls.from_name(model_name, n_classes=n_classes, pretrained=pretrained)
+        else:
+            class CustomHead(nn.Module):
+                def __init__(self, out_channels):
+                    super().__init__()
+                    self.encoder = cls.encoder(model_name, pretrained=pretrained)
+                    self.custom_head = custom_head(self.n_channels * 2, out_channels)
+
+                @property
+                def n_channels(self):
+                    n_channels_dict = {'efficientnet-b0': 1280, 'efficientnet-b1': 1280, 'efficientnet-b2': 1408,
+                                       'efficientnet-b3': 1536, 'efficientnet-b4': 1792, 'efficientnet-b5': 2048,
+                                       'efficientnet-b6': 2304, 'efficientnet-b7': 2560}
+                    return n_channels_dict[self.encoder.name]
+
+                def forward(self, x):
+                    x = self.encoder(x)
+                    mp = nn.AdaptiveMaxPool2d(output_size=(1, 1))(x)
+                    ap = nn.AdaptiveAvgPool2d(output_size=(1, 1))(x)
+                    x = torch.cat([mp, ap], dim=1)
+                    x = x.view(x.size(0), -1)
+                    x = self.custom_head(x)
+
+                    return x
+
+            return CustomHead(n_classes)
+
 
 def _get_model_by_name(model_name, classes=1000, pretrained=False):
     block_args_list, global_params = get_efficientnet_params(model_name, override_params={'num_classes': classes})
