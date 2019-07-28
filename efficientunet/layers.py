@@ -172,11 +172,9 @@ def up_conv(in_channels, out_channels):
 
 def custom_head(in_channels, out_channels):
     return nn.Sequential(
-        nn.BatchNorm1d(in_channels),
         nn.Dropout(),
         nn.Linear(in_channels, 512),
         nn.ReLU(inplace=True),
-        nn.BatchNorm1d(512),
         nn.Dropout(),
         nn.Linear(512, out_channels)
     )
