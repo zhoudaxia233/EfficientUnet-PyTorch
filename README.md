@@ -2,7 +2,7 @@
 A PyTorch 1.0 Implementation of Unet with EfficientNet as encoder
 
 ## Useful notes
-1. Due to some rounding problem in PyTorch (*not so sure*), the input shape should be divisible by 32.  
+1. Due to some rounding problem in the decoder path (*not a bug, this is a feature* :smirk:), the input shape should be divisible by 32.  
 e.g. 224x224 is a suitable size for input images, but 225x225 is not.
 
 ---
@@ -26,6 +26,15 @@ from efficientunet import *
 
 model = EfficientNet.from_name('efficientnet-b5', n_classes=5, pretrained=True)
 ```
+However, most of the time, I prefer to use a model with a custom head rather than just a simple change of the 
+`output_channels` of the last fully-connected layer.  
+To have a model with custom head, use:
+```python
+from efficientunet import *
+
+model = EfficientNet.custom_head('efficientnet-b5', n_classes=5, pretrained=True)
+```
+
 #### 2. EfficientUnets
 e.g. say you want a *pretrained efficientunet-b0* model with *2* output channels:
 ```python
