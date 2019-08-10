@@ -26,14 +26,16 @@ from efficientunet import *
 
 model = EfficientNet.from_name('efficientnet-b5', n_classes=5, pretrained=True)
 ```
-However, most of the time, I prefer to use a model with a custom head rather than just a simple change of the 
-`output_channels` of the last fully-connected layer.  
-To have a model with custom head, use:
+If you prefer to use a model with a custom head rather than just a simple change of the 
+`output_channels` of the last fully-connected layer, use:
 ```python
 from efficientunet import *
 
 model = EfficientNet.custom_head('efficientnet-b5', n_classes=5, pretrained=True)
 ```
+> *The structure of model with custom head*:  
+`encoder` -> `concatenation of [AvgPool2d, MaxPool2d]` -> `Flatten` -> `Dropout` -> `Linear(512)` -> `ReLU` -> `Dropout`
+> -> `Linear(n_classes)`
 
 #### 2. EfficientUnets
 e.g. say you want a *pretrained efficientunet-b0* model with *2* output channels:
